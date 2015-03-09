@@ -6,6 +6,7 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Created by Andrew on 3/8/2015.
@@ -65,7 +66,28 @@ public class MainMenuGUI extends JFrame implements KeyListener {
         slowType(level, "Lvl. " + s.getLevel());
         repaint();
         writeFile(new File(file.getAbsolutePath() + "/LastPlayed.txt"), s.getFile().getName().replaceAll(".txt",""));
+        
+        removeMenu();
+        
+        
     }
+    public void removeMenu()
+    {
+        contin.setVisible(false);
+        newGame.setVisible(false);
+        loadGame.setVisible(false);
+        info.setVisible(false);
+        quit.setVisible(false);
+    }
+    public void readdMenu()
+    {
+        contin.setVisible(true);
+        newGame.setVisible(true);
+        loadGame.setVisible(true);
+        info.setVisible(true);
+        quit.setVisible(true);
+    }
+    
     public Save getLastPlayed()
     {
         try {
@@ -124,7 +146,7 @@ public class MainMenuGUI extends JFrame implements KeyListener {
             }
             if(location==4)
             {
-                slowType(infoBox, "This is Andrewcpu's Game.","It has no purpose,","BUT TO FIGHT MONSTERS","TRY NOT TO GET ADDICTED","NO ONE LIKES 8 BIT GAMES ANYWAY - NO ONE EVER", "Andrewcpu's Game");
+                slowType(infoBox, "This is andrewcpu's game v1.0.","It has no purpose,","BUT TO FIGHT MONSTERS","TRY NOT TO GET ADDICTED","NO ONE LIKES 8 BIT GAMES ANYWAY - NO ONE EVER", "andrewcpu's game v1.0");
             }
             if(location==3)
             {
@@ -158,15 +180,11 @@ public class MainMenuGUI extends JFrame implements KeyListener {
             }
             if(location==2)
             {
-                JFrame frame = new JFrame("NEW GAME");
-                frame.setBounds(0,0,400,400);
-                frame.setLayout(null);
-                JLabel label = new JLabel("Choose a username:");
-                JTextField username = new JTextField();
-                label.setBounds(0,0,400,200);
-                username.setBounds(0,200,400,200);
-                frame.add(label);
-                frame.add(username);
+                slowType(infoBox,"Please enter a name...");
+            JTextField username = new JTextField();
+
+                username.setBounds(getWidth() / 2 - 100, 100, 200, 25);
+                add(username);
                 username.addKeyListener(new KeyListener() {
                     @Override
                     public void keyTyped(KeyEvent e) {
@@ -182,7 +200,8 @@ public class MainMenuGUI extends JFrame implements KeyListener {
                             } catch (Exception e1) {
                                 e1.printStackTrace();
                             }
-                            frame.dispose();
+                            remove(username);
+                            slowType(infoBox,"andrewcpu's game v1.0");
                         }
                     }
 
@@ -193,12 +212,25 @@ public class MainMenuGUI extends JFrame implements KeyListener {
                 });
 
 
-                frame.setVisible(true);
+
             }
             if(location==1)
             {
                 loadSaves();
                 loadSave(getLastPlayed());
+            }
+        }
+        if(event.getKeyCode()==KeyEvent.VK_ESCAPE)
+        {
+            if(contin.isShowing())
+            {
+                removeMenu();
+                slowType(infoBox, "Game Paused");
+            }
+            else
+            {
+                slowType(infoBox,"Game Resumed","andrewcpu's game v1.0");
+                readdMenu();
             }
         }
         update();
@@ -229,6 +261,24 @@ public class MainMenuGUI extends JFrame implements KeyListener {
         String toWrite = "NAME: " + username + line + "LEVEL: 1" + line + "HEALTH: 10" + line + "X: 50" + line + "Y: 50" + line  +"UUID: " + uuid;
         File file = new File(saveLocation.getAbsolutePath() + "/" + uuid + ".txt");
         writeFile(file, toWrite);
+        loadSaves();
+        
+        Save save = null;
+        for(Save s : saves)
+        {
+            if(s.getUUID().toString().equalsIgnoreCase(uuid.toString()))
+            {
+                save = s;
+            }
+        }
+        if(save!=null)
+        {
+            loadSave(save);
+        }
+        
+        
+        
+        
     }
     JLabel contin = new JLabel("CONTINUE");
     JLabel newGame = new JLabel("NEW GAME");
@@ -236,7 +286,7 @@ public class MainMenuGUI extends JFrame implements KeyListener {
     JLabel info = new JLabel("INFO");
     JLabel quit = new JLabel("QUIT");
     JLabel background = new JLabel();
-    Game game = new Game();
+    Game game = new Game(this);
     public void update()
     {
         contin.setBackground(new Color(0,0,0,0));
@@ -292,12 +342,14 @@ public class MainMenuGUI extends JFrame implements KeyListener {
 
     }
     JLabel infoBox = new JLabel();
+    HashMap<JLabel,Future> threads= new HashMap<>();
+
     public Thread slowType(final JLabel label, final String... string)
     {
 
 
 
-        Executors.newSingleThreadExecutor().submit(new Runnable() {
+        Future thread = Executors.newSingleThreadExecutor().submit(new Runnable() {
             @Override
             public void run() {
                 for(final String s : string)
@@ -336,6 +388,13 @@ public class MainMenuGUI extends JFrame implements KeyListener {
                 }
             }
         });
+
+        if(threads.containsKey(label))
+        {
+            threads.get(label).cancel(true);
+            threads.remove(label);
+        }
+        threads.put(label,thread);
        // thread.run();
 
 
@@ -417,7 +476,7 @@ public class MainMenuGUI extends JFrame implements KeyListener {
         setVisible(true);
         update();
 
-        slowType(infoBox, "Welcome to the game!","Nothing has been completed yet","I'm sorry doll","We'll finish it ASAP <3","andrewcpu's game");
+        slowType(infoBox, "Welcome to the game!","Most of the mechanics are done,", "andrewcpu's game v1.0");
 
 
         addKeyListener(this);
